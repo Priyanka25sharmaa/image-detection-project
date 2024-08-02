@@ -1,10 +1,14 @@
-from flask import Flask,render_template
+from flask import Flask
+from config import app,db
+from mridul import mridul
+from auth import auth
+from priyanka import priyanka
 
-app = Flask (__name__)
+app.register_blueprint(priyanka)
+app.register_blueprint(mridul)
+app.register_blueprint(auth)
 
-@app.route("/")
-def layout():
-    return render_template("layout.html")
-
-if __name__ == "__main__":
-    app.run(debug = True)
+if __name__=="__main__":
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
