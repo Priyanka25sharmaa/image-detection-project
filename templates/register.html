@@ -9,6 +9,9 @@
 <body>
     <div class="grid h-screen w-screen grid-cols-2 place-items-center">
         <div class="text-md w-96">
+            <div class="z-20 grid place-items-center">
+                {% block model %}{% endblock %}
+            </div>
             <h1 class="text-blue-600 font-semibold my-4">C-DOT</h1>
             {% if registration %}
                 <div class="text-black grid gap-4 w-full">
@@ -42,6 +45,7 @@
             <div class="w-full h-full" style="background-image: url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); background-position:center;background-repeat:no-repeat;background-size:cover">
                 <div class="bg-blue-500 w-full h-full opacity-65"></div>
             </div>
+
     </div>
 </body>
 </html>

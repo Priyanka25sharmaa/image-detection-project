@@ -1,0 +1,13 @@
+{% extends "register.html" %}
+{% block model %}
+{% if model %}
+<div id="modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full grid place-items-center hidden">
+    <div class="relative mx-auto p-5 border w-[50vw] shadow-lg rounded-md bg-white">
+
+        <h1>{{error_message}}</h1>
+        <h2>{{error_code}}</h2>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -38,8 +38,8 @@ def register():
         db.session.add(new_user)
         db.session.commit()
     except Exception as e:
-        return (ApiError(str(e),HTTP_400_BAD_REQUEST))
-    # return ApiResponse("User created successfully",HTTP_201_CREATED,list(new_user))
+        #
+        return ApiResponse("User created successfully",HTTP_201_CREATED,list(new_user))
     return redirect("/?login=true")
 
 @auth.route("/update-user/<int:user_id>",methods=["PATCH"])
@@ -77,9 +77,12 @@ def login():
     user=User.query.filter_by(username=username).first()
 
     if user and user.password!=password:
-        return ApiError("Incorrect Password",HTTP_400_BAD_REQUEST)
-    if not user:
-        return ApiError("Invalid User",HTTP_400_BAD_REQUEST)
+        try:
+            return RenderResponse('error.html',HTTP_400_BAD_REQUEST,{"error_message":str(e),"error_code":"invalide user"})
+        except:
+             return ApiError('an error occured',HTTP_400_BAD_REQUEST) 
+    #if not user:
+     #   return ApiError("Invalid User",HTTP_400_BAD_REQUEST)
     
     access_token=create_access_token(identity=user.id)
     refresh_token=create_refresh_token(identity=user.id)

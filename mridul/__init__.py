@@ -1,7 +1,7 @@
 from flask import Blueprint,request
 from utils.ApiResponse import ApiResponse
 from utils.RenderResponse import RenderResponse
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required,current_user,get_jwt_identity
 from constants.https_status_codes import *
 from torchvision import models,transforms as T
 from config import cache,socket
@@ -9,6 +9,7 @@ import torch
 from PIL import Image
 import cv2
 import torch
+from models import User
 
 
 mridul=Blueprint("mridul",__name__,url_prefix="/api/v1/mridul")
@@ -48,8 +49,14 @@ def load_model():
 
 @mridul.route("/",methods=['GET'])
 @jwt_required()
+
 def load_model():
-    return RenderResponse("dashboard.html",HTTP_200_OK,context={'message':"Model has been loaded","username":"Mridulti"})
+    
+    current_user = get_jwt_identity()
+    
+    var = User.query.filter_by(id= current_user).one_or_none()
+    
+    return RenderResponse("dashboard.html",HTTP_200_OK,context={'message':"Model has been loaded","username":var.username})
 
 @mridul.route("/predict",methods=['POST'])
 def predict_img():
