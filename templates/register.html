@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="grid h-screen w-screen grid-cols-2 place-items-center">
+        <div class="text-md w-96">
+            <h1 class="text-blue-600 font-semibold my-4">C-DOT</h1>
+            {% if registration %}
+                <div class="text-black grid gap-4 w-full">
+                    <h1 class="font-bold text-3xl leading-4">Register for an Account</h1>
+                    <p>Create your Account for AI check Dashboard</p>
+                    <form action="/api/v1/auth/register" method="POST" class="grid gap-3 place-items-center">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='firstName' placeholder="First Name" type="text">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='lastName' placeholder="Last Name" type="text">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='email' placeholder="Email" type="text">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='userName' placeholder="Username" type="text">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='password' placeholder="Password" type="password">
+                        <button class="p-2 w-full text-lg tracking-wider font-semibold bg-blue-600 text-white">Register</button>
+                        <p>Already have an account? <b class="text-blue-600 cursor-pointer"><a href="/?login=true">Login</a></b></p>
+                    </form>
+                </div>
+            {% else %}
+                <div class="text-black grid gap-4 w-full">
+                    <h1 class="font-bold text-3xl leading-4">Login to your Account</h1>
+                    <p>Welcome back to your AI check Dashboard</p>
+                    <form action="/api/v1/auth/login" method="POST" class="grid gap-3 place-items-center">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='userName' placeholder="Username" type="text">
+                        <input class="p-2 w-full outline-0 border-2 border-black-100" name='password' placeholder="Password" type="password">
+                        <button class="p-2 w-full text-lg tracking-wider font-semibold bg-blue-600 text-white">Login</button>
+                        <p>Don't have an account? <b class="text-blue-600 cursor-pointer"><a href="/?register=true">Register</a></b></p>
+                    </form>
+                </div>
+            {% endif %}
+            
+        </div>
+        
+            <div class="w-full h-full" style="background-image: url('https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); background-position:center;background-repeat:no-repeat;background-size:cover">
+                <div class="bg-blue-500 w-full h-full opacity-65"></div>
+            </div>
+    </div>
+</body>
+</html>

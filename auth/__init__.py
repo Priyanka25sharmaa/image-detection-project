@@ -1,4 +1,4 @@
-from flask import Blueprint,request,jsonify
+from flask import Blueprint,request,jsonify,url_for,redirect,make_response,render_template
 from models import User
 from constants.https_status_codes import *
 from config import db,jwt
@@ -6,6 +6,7 @@ import validators
 from flask_jwt_extended import create_access_token,jwt_required,set_access_cookies,create_refresh_token,set_refresh_cookies,get_jwt_identity,unset_jwt_cookies
 from utils.ApiError import ApiError 
 from utils.ApiResponse import ApiResponse 
+from utils.RenderResponse import RenderResponse
 
 auth=Blueprint("auth",__name__,url_prefix="/api/v1/auth")
 
@@ -19,11 +20,12 @@ def all_user():
 
 @auth.route("/register",methods=['POST'])
 def register():
-    first_name=request.json.get("firstName")
-    last_name=request.json.get("lastName")
-    email=request.json.get("email")
-    userName=request.json.get("userName")
-    password=request.json.get("password")
+    data=request.form
+    first_name=data["firstName"]
+    last_name=data["lastName"]
+    email=data["email"]
+    userName=data["userName"]
+    password=data["password"]
 
     if not first_name or not last_name or not email:
         return (ApiError("You must include first name , last name and email",HTTP_400_BAD_REQUEST))
@@ -37,7 +39,8 @@ def register():
         db.session.commit()
     except Exception as e:
         return (ApiError(str(e),HTTP_400_BAD_REQUEST))
-    return ApiResponse("User created successfully",HTTP_201_CREATED,list(new_user))
+    # return ApiResponse("User created successfully",HTTP_201_CREATED,list(new_user))
+    return redirect("/?login=true")
 
 @auth.route("/update-user/<int:user_id>",methods=["PATCH"])
 @jwt_required()
@@ -68,10 +71,9 @@ def delete_user(user_id):
 
 @auth.route("/login",methods=['POST'])
 def login():
-    data=request.get_json()
+    data=request.form
     username=data['userName']
     password=data['password']
-
     user=User.query.filter_by(username=username).first()
 
     if user and user.password!=password:
@@ -82,16 +84,9 @@ def login():
     access_token=create_access_token(identity=user.id)
     refresh_token=create_refresh_token(identity=user.id)
 
-    resp=jsonify({
-        'success':True,
-        'message':"User Logged In",
-        'access_token':access_token,
-        'refresh_token':refresh_token,
-        'status':HTTP_200_OK
-    })
+    resp = make_response(redirect(url_for("mridul.load_model")))
     set_access_cookies(resp,access_token)
     set_refresh_cookies(resp,refresh_token)
-
     return resp
 
 
@@ -108,10 +103,6 @@ def refresh():
 
 @auth.route('/logout', methods=['POST'])
 def logout():
-    resp=jsonify({
-        'success':True,
-        'message':"User Logged Out",
-        'status':HTTP_200_OK
-    })
+    resp=make_response(redirect("/?login=true"))
     unset_jwt_cookies(resp)
-    return resp, 200
+    return resp
