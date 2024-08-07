@@ -21,4 +21,4 @@ app.config['JWT_TOKEN_LOCATION'] = ["headers", "cookies", "json", "query_string"
 db=SQLAlchemy(app)
 jwt=JWTManager(app)
 cache = Cache(app)
-socket=SocketIO(app)
+# socket=SocketIO(app,cors_allowed_origins="*")

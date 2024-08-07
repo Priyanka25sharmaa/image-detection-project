@@ -1,4 +1,4 @@
-from flask import Blueprint,request
+from flask import Blueprint,request,url_for,send_from_directory,jsonify
 from utils.ApiResponse import ApiResponse
 from utils.RenderResponse import RenderResponse
 from flask_jwt_extended import jwt_required
@@ -8,13 +8,18 @@ from config import cache,socket
 import torch
 from PIL import Image
 import cv2
+import os
 import torch
 
 
 mridul=Blueprint("mridul",__name__,url_prefix="/api/v1/mridul")
 
+UPLOAD_FOLDER = 'images/uploads'
+ANNOTATED_FOLDER = 'images/results'
+
 @mridul.before_app_request
 def load_model():
+    print("Loading the model")
     model=models.detection.fasterrcnn_resnet50_fpn(weights=None)
         
     # Load the model state dictionary
@@ -40,7 +45,6 @@ def load_model():
     cache.set('font',font)
     
     socket.emit('progress',{'data':"Model Loaded"})
-
 # @mridul.route("/",methods=['GET'])
 # @jwt_required
 # def loading():
@@ -49,19 +53,32 @@ def load_model():
 @mridul.route("/",methods=['GET'])
 @jwt_required()
 def load_model():
+    # global progress
+
+    # socket.emit('progress',{'data':"Model has been loaded"})
     return RenderResponse("dashboard.html",HTTP_200_OK,context={'message':"Model has been loaded","username":"Mridulti"})
 
-@mridul.route("/predict",methods=['POST'])
+@mridul.route('/images/<path:filename>')
+def serve_image(filename):
+
+    return send_from_directory(ANNOTATED_FOLDER, filename)
+
+# TODO: YOLO IMAGE
+@mridul.route("/predict/img",methods=['POST'])
 def predict_img():
+    print("Predicting.....")
+    global progress
+
     model=cache.get('model')
     coco_names=cache.get('coco_names')
     font=cache.get('font')
 
-
     data=request.files['img']
-    data.save(data.filename)
+    upload_path = os.path.join(UPLOAD_FOLDER, data.filename)
+    data.save(upload_path)
     
-    img=Image.open(data.filename)
+    img=Image.open('images/uploads/'+data.filename)
+
 
     socket.emit('progress',{'data':"Image loaded "})
     socket.start_background_task(predict_img)
@@ -77,7 +94,8 @@ def predict_img():
     socket.start_background_task(predict_img)
 
 
-    igg=cv2.imread(data.filename)
+    igg=cv2.imread(upload_path)
+    print(igg)
     for i in range(num):
         x1,y1,x2,y2=bboxes[i].numpy().astype("int")
         class_name=coco_names[labels.numpy()[i]-1]
@@ -87,7 +105,24 @@ def predict_img():
     socket.emit('progress',{'data':"Annotations completed"})
     socket.start_background_task(predict_img)
 
-    annotated_image_path = "annotated_" + data.filename
-    cv2.imwrite(annotated_image_path, igg)
+    annotated_image_path = os.path.join("images/results", "annotated_" + data.filename)
+    if cv2.imwrite(annotated_image_path, igg):
+        # Construct the URL for the annotated image
+        annotated_image_url = url_for('mridul.serve_image', filename="annotated_" + data.filename)
+        socket.emit('progress',{'data':"Annotations completed"})
+        return RenderResponse("resultImage.html", HTTP_200_OK, {'resultImage': annotated_image_url})
+    
+    # TODO: remove image after some time
+    
+    else:
+        return ApiResponse("Error saving annotated image", HTTP_500_INTERNAL_SERVER_ERROR)
+    
+# TODO: YOLO VIDEO
+@mridul.route("/predict/video")
+def predict_video():
+    return RenderResponse("resultImage.html",HTTP_200_OK,{'resultVideo':"result"})
 
-    return ApiResponse("Model has been loaded!",HTTP_200_OK,{"annotate_image":annotated_image_path})
+# TODO: DEEP FAKE MODEL
+@mridul.route("/predict/DeepFake")
+def predict_DeepFake():
+    return RenderResponse("resultImage.html",HTTP_200_OK,{'resultVideo':"result"})
