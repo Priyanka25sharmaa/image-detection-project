@@ -128,53 +128,64 @@ def predict_img(data):
     
 # TODO: YOLO VIDEO
 def predict_video(data):
-    model=cache.get('model')
-    coco=cache.get('coco_names')
-    font=cache.get('font')
-
+    # model = cache.get('model')
+    # coco = cache.get('coco_names')
+    # font = cache.get('font')
+    model=YOLO('weights/yolov8n.pt')
+    print(model)
     upload_path = os.path.join(UPLOAD_FOLDER, data.filename)
-    print(upload_path)
     data.save(upload_path)
-    file_extension = f.filename.rsplit('.', 1)[1].lower()
-
+    file_extension = data.filename.rsplit('.', 1)[-1].lower()
+    
+     # Check file extension
     if file_extension == 'mp4':
+        print("Video Path:", upload_path)
+        print("File Extension:", file_extension)
         video_path = upload_path
         cap = cv2.VideoCapture(video_path)
+        
+        if not cap.isOpened():
+            print("Error: Could not open video file.")
+            return ApiResponse("Error opening video file", HTTP_400_BAD_REQUEST)
+        
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fourcc = cv2.VideoWriter_fourcc(*'avc1')
-        output_path = os.path.join('static', f.filename)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Use 'mp4v' for mp4 files
+        output_path = os.path.join('images/results', "annotated_" + data.filename)
         out = cv2.VideoWriter(output_path, fourcc, 30.0, (frame_width, frame_height))
-        frames = [] 
-        i=0
+        
+        print("Starting video processing...")
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
+                print("Frame read failed or end of video.")
                 break
-            i=i+1
-            if i<10:
-                continue
-            i=0
-            results = model(frame, save=False)
-            res_plotted = results[0].plot()
+            
+            print("Processing frame...")
+            # Convert BGR to RGB
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Perform object detection
+            results = model(rgb_frame)
+            # Annotate frame
+            annotated_frame = results[0].plot()
+            
+            # Convert RGB to BGR for OpenCV
+            annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_RGB2BGR)
+            
+            # Write frame to output video
+            out.write(annotated_frame)
 
-            # Append processed frame to list
-            frames.append(res_plotted)
-
-            if cv2.waitKey(1) == ord('q'):
-                break
-
-        # Write all frames to output video
-        for frame in frames:
-            out.write(frame)
-
+        # Release resources
         cap.release()
         out.release()
         cv2.destroyAllWindows()
 
-    annotated_video_url= url_for('mridul.serve_image', filename="annotated_" + data.filename)
+        # Return URL for the annotated video
+        annotated_video_url = url_for('mridul.serve_image', filename="annotated_" + data.filename)
+        return annotated_video_url
+    else:
+        return ApiResponse("Unsupported file type", HTTP_400_BAD_REQUEST)
 
-    return annotated_video_url
 
 # TODO: DEEP FAKE MODEL
 def predict_DeepFake(data):
