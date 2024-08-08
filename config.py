@@ -16,9 +16,11 @@ app.config["JWT_COOKIE_SECURE"] = False
 app.config["JWT_SECRET_KEY"] = "super-secret"
 app.config['CACHE_TYPE']='simple'
 app.config['MODEL_PATH']='path/to'
+app.config["REDIS_URL"] = "redis://localhost:6379/0"
+app.config['JWT_COOKIE_CSRF_PROTECT']=False
 app.config['JWT_TOKEN_LOCATION'] = ["headers", "cookies", "json", "query_string"]
 
 db=SQLAlchemy(app)
 jwt=JWTManager(app)
 cache = Cache(app)
-# socket=SocketIO(app,cors_allowed_origins="*")
+socket=SocketIO(app,cors_allowed_origins="*")

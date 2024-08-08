@@ -62,16 +62,16 @@
                                 sure where to start?</p>
                             <div class="grid md:grid-cols-1 px-32 lg:grid-cols-2 gap-10 py-10">
                                 <button
-                                    class="open-modal p-5 text-xl font-semibold border-2 border-neutral-200 hover:bg-neutral-200 rounded-xl flex gap-6 place-items-center"  data-action="/api/v1/mridul/predict/img"><i
+                                    class="open-modal p-5 text-xl font-semibold border-2 border-neutral-200 hover:bg-neutral-200 rounded-xl flex gap-6 place-items-center"  data-action="/api/v1/mridul/dashboard?predict_img"><i
                                         class="fa fa-picture-o text-4xl text-blue-600" aria-hidden="true"></i>Image
                                     Segmentation</button>
                                 <button
-                                    class="open-modal p-5 text-xl font-semibold border-2 border-neutral-200 hover:bg-neutral-200 rounded-xl flex gap-6 place-items-center"  data-action="/api/v1/mridul/predict/video"
+                                    class="open-modal p-5 text-xl font-semibold border-2 border-neutral-200 hover:bg-neutral-200 rounded-xl flex gap-6 place-items-center"  data-action="/api/v1/mridul/dashboard?predict_video"
                                     data-action="/api/v1/model/image-segmentation"><i
                                         class="fa fa-object-group text-4xl text-orange-500"
                                         aria-hidden="true"></i>Object Detection in Video</button>
                                 <button
-                                    class="open-modal p-5 text-xl font-semibold border-2 border-neutral-200 hover:bg-neutral-200 rounded-xl flex gap-6 place-items-center"  data-action="/api/v1/mridul/predict/DeepFake"><i
+                                    class="open-modal p-5 text-xl font-semibold border-2 border-neutral-200 hover:bg-neutral-200 rounded-xl flex gap-6 place-items-center"  data-action="/api/v1/mridul/dashboard/predict_df"><i
                                         class="fa fa-meh-o text-4xl text-red-600" aria-hidden="true" ></i>Deep
                                     Fake!</button>
                                 <button
@@ -86,7 +86,17 @@
 
 
         </div>
-        {% block result %}{% endblock %}
+        {% if resultImage%}
+            <div id="Image modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full grid place-items-center">
+                <div class="relative mx-auto p-5 border w-[50vw] shadow-lg rounded-md bg-white">
+                    <div class="mt-3 text-center">
+                        <h1 id='message'>{{resultImage}}</h1>
+                        <img id='resultImage' src={{resultImage}}>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
         <!-- Modal -->
         <div id="modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full grid place-items-center hidden">
             <div class="relative mx-auto p-5 border w-[50vw] shadow-lg rounded-md bg-white">
@@ -98,10 +108,11 @@
                                 size in under 300MB</i></p>
                         <form id="upload-form" method="POST" enctype="multipart/form-data"
                             class="border border-dashed mt-10 w-full border-4 border-gray-300 rounded-xl flex flex-col place-items-center p-24 w-80">
-                            <input type="file" name='img' id="file-input" >
+                            <input type="file" name='img' id="file-input">
                             <i aria-hidden="true" alt="Upload Icon"
                                 class="fa fa-cloud-upload bg-stone-200 text-4xl p-5 rounded-full cursor-pointer"
                                 id="upload-icon"></i>
+                                
                             <h1 class="font-bold text-2xl text-blue-500">Drop Your Files Here</h1>
                             <p class="tracking-tighter">or browse files from your computer</p>
                             <div class="items-center px-4 py-3">
@@ -145,40 +156,42 @@
             modal.classList.add('hidden');
         };
 
-        window.onclick = function (event) {
-            if (event.target == modal) {
-                modal.classList.add('hidden');
-            }
-        };
-
-        var socket = io({
-            transports: ['websocket'],
-            upgrade: false,
-            reconnection: false
-        });
-
-        socket.on('connect', function() {
-            console.log('Connected to the server');
-        });
-
-        socket.on('connect_error', function(error) {
-            console.error('Connection Error:', error);
-        });
-
-        socket.on('disconnect', function(reason) {
-            console.log('Disconnected:', reason);
-        });
-        socket.on('progress', function(data) {
-            console.log(data)
-            document.getElementById('progress').innerHTML = data
-        });
-        function fetchUpdate(){
-            setInterval(()=>{
-                fetch(window.location.href)
-            },10000)
+        function startListening() {
+            const eventSource = new EventSource("/api/v1/mridul/predict/img");
+            eventSource.onmessage = function(event) {
+                const progressElement = document.getElementById("progress");
+                progressElement.innerHTML += `<p>${event.data}</p>`;
+            };
         }
 
-        fetchUpdate()
+        //var socket = io({
+        //    transports: ['websocket'],
+        //    upgrade: false,
+        //    reconnection: false
+        //});
+//
+        //socket.on('connect', function() {
+        //    console.log('Connected to the server');
+        //});
+//
+        //socket.on('connect_error', function(error) {
+        //    console.error('Connection Error:', error);
+        //});
+//
+        //socket.on('disconnect', function(reason) {
+        //    console.log('Disconnected:', reason);
+        //});
+        //socket.on('progress', function(data) {
+        //    console.log(data)
+        //    document.getElementById('progress').innerHTML = data
+        //});
+        //function fetchUpdate(){
+        //    setInterval(()=>{
+        //        fetch(window.location.href)
+        //    },10000)
+        //}
+//
+        //fetchUpdate()
 
     });
     
