@@ -69,62 +69,21 @@ def serve_image(filename):
 # TODO: YOLO IMAGE
 def predict_img(data):
     print("Predicting.....")
-    print(data.filename)
-
-    model=cache.get('model')
-    coco_names=cache.get('coco_names')
-    font=cache.get('font')
     
-    # yield "data: {}\n\n".format("Model and Font loaded")
-
-    upload_path = os.path.join(UPLOAD_FOLDER, data.filename)
-    print(upload_path)
-    data.save(upload_path)
-    
-    img=Image.open('images/uploads/'+data.filename)
-
-    yield "data: {}\n\n".format("Image loaded")
-    # socket.emit('progress',{'data':"Image loaded "})
-    # socket.start_background_task(predict_img)
-
-    transform= T.ToTensor()
-    ig=transform(img)
-    with torch.no_grad():
-        _pred=model([ig])
-    bboxes,labels,scores=_pred[0]['boxes'],_pred[0]['labels'],_pred[0]['scores']
-    num=torch.argwhere(scores>0.9).shape[0]
-
-    # socket.emit('progress',{'data':"Predicted image formed"})
-    # socket.start_background_task(predict_img)
-        
-    yield "data: {}\n\n".format("Image Annotated")
+    file_path = os.path.join("images/uploads", data.filename)
+    data.save(file_path)
+    model = YOLO('weights/yolov8n.pt')
+    results = model(file_path)
+    # results = yolo(image, save=True)
+    res_plotted = results[0].plot()
+    result_dir = "images/results"
+    output_path = os.path.join(result_dir, "result.jpg")
+    cv2.imwrite(output_path, res_plotted) 
+    # results.save("images/results")
+    annotated_video_url= url_for('mridul.serve_image', filename="result.jpg")
+    return annotated_video_url
 
 
-    igg=cv2.imread(upload_path)
-    print(igg)
-    for i in range(num):
-        x1,y1,x2,y2=bboxes[i].numpy().astype("int")
-        class_name=coco_names[labels.numpy()[i]-1]
-        igg=cv2.rectangle(igg,(x1,y1),(x2,y2),(0,255,0),2)
-        igg=cv2.putText(igg,class_name,(x1,y1-10),font,2,(255,0,0),2,cv2.LINE_AA)
-    
-    # socket.emit('progress',{'data':"Annotations completed"})
-    # socket.start_background_task(predict_img)
-        
-    yield "data: {}\n\n".format("Process completed")
-
-    annotated_image_path = os.path.join("images/results", "annotated_" + data.filename)
-    if cv2.imwrite(annotated_image_path, igg):
-        # Construct the URL for the annotated image
-        annotated_image_url = url_for('mridul.serve_image', filename="annotated_" + data.filename)
-        # socket.emit('progress',{'data':"Annotations completed"})
-        return annotated_image_url
-        # return RenderResponse("resultImage.html", HTTP_200_OK, {'resultImage': annotated_image_url})
-    
-    # TODO: remove image after some time
-    
-    else:
-        return ApiResponse("Error saving annotated image", HTTP_500_INTERNAL_SERVER_ERROR)
     
 # TODO: YOLO VIDEO
 def predict_video(data):
