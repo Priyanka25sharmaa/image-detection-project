@@ -2,6 +2,8 @@ corgi-4415649_1280.jpg
 annotated_corgi-4415649_1280.jpg
 model.pth
 path/*
+__pycache__ /*
+runs/*
 # Created by https://www.toptal.com/developers/gitignore/api/flask
 # Edit at https://www.toptal.com/developers/gitignore?templates=flask
 

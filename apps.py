@@ -2,15 +2,13 @@ from flask import Flask,request,make_response,redirect,url_for
 from config import app,db
 from mridul import mridul
 from utils.RenderResponse import RenderResponse
-from constants.https_status_codes import *
-from flask_sse import sse
 from auth import auth
 from priyanka import priyanka
+from constants.https_status_codes import *
 
 app.register_blueprint(priyanka)
 app.register_blueprint(mridul)
 app.register_blueprint(auth)
-app.register_blueprint(sse,url_prefix="/stream")
 
 @app.route("/",methods=['GET'])
 def register_login():
